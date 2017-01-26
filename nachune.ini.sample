@@ -1,0 +1,10 @@
+[general]
+log = /tmp/nachune.log
+nasne = 192.168.1.130
+chinachu = 192.168.1.131:10772
+
+[match]
+start = 5
+end = 5
+duration = 5
+title = True
