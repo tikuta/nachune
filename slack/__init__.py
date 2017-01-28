@@ -1,0 +1,1 @@
+from .slack import post, info, success, warning, error

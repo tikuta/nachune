@@ -8,3 +8,6 @@ start = 5
 end = 5
 duration = 5
 title = True
+
+[notify]
+slack = 

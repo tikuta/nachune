@@ -21,3 +21,5 @@ match_start_gap = timedelta(minutes=__config["match"].getint("start"))
 match_end_gap = timedelta(minutes=__config["match"].getint("end"))
 match_duration_gap = timedelta(minutes=__config["match"].getint("duration"))
 match_title_check = __config["match"].getboolean("title")
+
+slack_webhook_url = __config["notify"]["slack"]
