@@ -34,7 +34,7 @@ def main():
             nachune.logger.error(e.message)
             slack.error(e.message, np)
         else:
-            nachune.logger.info(f"Successfully reserved: {title} (pid={np['id']}, sid={sid}, start={start.isoformat()}, duration={duration.isoformat()})")
+            nachune.logger.info(f"Successfully reserved: {title} (pid={np['id']}, sid={sid}, start={start.isoformat()}, duration={duration / timedelta(minutes=1)})")
             slack.success("録画予約しました", np, cp)
 
 if __name__ == "__main__":
