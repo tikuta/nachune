@@ -1,1 +1,1 @@
-from .slack import post, info, success, warning, error
+from .slack import post, info, success, warning, error, fatal

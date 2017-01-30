@@ -6,13 +6,18 @@ from nasne import Nasne
 import pyrfc3339
 from datetime import timedelta, datetime
 from chinachu.chinachu import JST
+from collections import namedtuple
+
+
+Attachments = namedtuple("Attachments", ["color", "emoji"])
 
 
 class NotifyLevel(enum.Enum):
-    info = "#E0E0E0"
-    success = "good"
-    warning = "warning"
-    error = "danger"
+    info = Attachments(color="#E0E0E0", emoji="")
+    success = Attachments(color="good", emoji=":clock3:")
+    warning = Attachments(color="warning", emoji=":warning:")
+    error = Attachments(color="danger", emoji=":heavy_exclamation_mark:")
+    fatal = Attachments(color="danger", emoji=":heavy_exclamation_mark::heavy_exclamation_mark:")
 
 
 def __nasne2slack(np: dict) -> dict:
@@ -39,42 +44,46 @@ def __chinachu2slack(cp: dict) -> dict:
     return field
 
 
-def post(level: NotifyLevel, message: str, np: dict, cp: dict):
-    cp = cp if cp else {}
+def post(level: NotifyLevel, message: str, *, text: str=None, fields: [dict]=None):
+    if not slack_webhook_url:
+        return
 
-    emoji = ""
-    if level is NotifyLevel.success:
-        emoji = ":clock3:"
-    elif level is NotifyLevel.warning:
-        emoji = ":warning:"
-    elif level is NotifyLevel.error:
-        emoji = ":heavy_exclamation_mark:"
-
-    data = {
+    payload = {
         "attachments": [
             {
-                "pretext": emoji + message,
-                "color": level.value,
+                "pretext": level.value.emoji + message,
+                "color": level.value.color,
                 "fallback": f"{level.name.upper()}: {message}",
-                "fields": [__nasne2slack(np), __chinachu2slack(cp)] if len(cp) > 0 else [__nasne2slack(np)]
+                "text": text if text else "",
+                "fields": fields if fields else []
             }
         ]
     }
-    if slack_webhook_url:
-        requests.post(slack_webhook_url, data=json.dumps(data))
+
+    requests.post(slack_webhook_url, data=json.dumps(payload))
 
 
-def info(message: str, np: dict, cp: dict=None):
-    post(NotifyLevel.info, message, np, cp)
+def info(message: str, np: dict, cp: dict):
+    post(NotifyLevel.info, message, fields=[__nasne2slack(np), __chinachu2slack(cp)])
 
 
-def success(message: str, np: dict, cp: dict=None):
-    post(NotifyLevel.success, message, np, cp)
+def success(message: str, np: dict, cp: dict):
+    post(NotifyLevel.success, message, fields=[__nasne2slack(np), __chinachu2slack(cp)])
 
 
-def warning(message: str, np: dict, cp: dict=None):
-    post(NotifyLevel.warning, message, np, cp)
+def warning(message: str, np: dict):
+    post(NotifyLevel.warning, message, fields=[__nasne2slack(np)])
 
 
-def error(message: str, np: dict, cp: dict=None):
-    post(NotifyLevel.error, message, np, cp)
+def error(message: str, np: dict=None, cp: dict=None):
+    fields = []
+    if np:
+        fields.append(__nasne2slack(np))
+    if cp:
+        fields.append(__chinachu2slack(cp))
+
+    post(NotifyLevel.error, message, fields=fields)
+
+
+def fatal(message: str):
+    post(NotifyLevel.fatal, message)

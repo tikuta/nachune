@@ -20,25 +20,28 @@ def main():
             duration = timedelta(seconds=np["duration"])
             title = Nasne.normalize(np["title"])
             cp = nachune.match_program(c, sid, start=start, duration=duration, title=title)
-            c.reserve(cp["id"])
-        except chinachu.DuplicatedReserveError as e:
-            nachune.logger.info(e.message)
-            slack.info("すでに予約されています", np, cp if cp else None)
         except nachune.NachuneError as e:
             nachune.logger.warning(e.message)
             slack.warning("該当する番組が見つかりませんでした", np)
         except nasne.NasneError as e:
             nachune.logger.error(e.message)
-            slack.error(e.message, np)
+            slack.error(e.message, np, cp if cp else None)
         except chinachu.ChinachuError as e:
             nachune.logger.error(e.message)
-            slack.error(e.message, np)
+            slack.error(e.message, np, cp if cp else None)
         else:
-            nachune.logger.info(f"Successfully reserved: {title} (pid={np['id']}, sid={sid}, start={start.isoformat()}, duration={duration / timedelta(minutes=1)})")
-            slack.success("録画予約しました", np, cp)
+            try:
+                c.reserve(cp["id"])
+            except chinachu.DuplicatedReserveError as e:
+                nachune.logger.info(e.message)
+                slack.info("すでに予約されています", np, cp)
+            else:
+                nachune.logger.info(f"Successfully reserved: {title} (pid={np['id']}, sid={sid}, start={start.isoformat()}, duration={duration / timedelta(minutes=1)})")
+                slack.success("録画予約しました", np, cp)
 
 if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        nachune.logger.fatal(e)
+        nachune.logger.fatal(str(e))
+        slack.fatal(str(e))
